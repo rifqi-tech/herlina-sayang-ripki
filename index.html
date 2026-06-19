@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Buat Kamu 💗</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, #FFD9E8, #FFF0F5, #FFE3EE);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .container {
+    background: white;
+    border-radius: 28px;
+    padding: 44px 32px;
+    max-width: 420px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(255, 120, 170, 0.25);
+    position: relative;
+    z-index: 2;
+  }
+
+  .question-text {
+    font-size: 1.4rem;
+    color: #5A3A4A;
+    margin-bottom: 36px;
+    font-weight: 600;
+    line-height: 1.4;
+    min-height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .btn-row {
+    position: relative;
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+    min-height: 60px;
+  }
+
+  button {
+    border: none;
+    border-radius: 100px;
+    padding: 14px 28px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  .btn-yes {
+    background: #FF6FA5;
+    color: white;
+    box-shadow: 0 8px 20px rgba(255, 111, 165, 0.4);
+    transition: transform 0.15s;
+  }
+  .btn-yes:hover { transform: scale(1.05); }
+  .btn-yes:active { transform: scale(0.96); }
+
+  .btn-no {
+    background: #F4F4F8;
+    color: #9A8A92;
+    position: relative;
+    transition: transform 0.15s ease-out;
+  }
+
+  .progress-dots {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 32px;
+  }
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #FFD3E2;
+    transition: background 0.3s;
+  }
+  .dot.active { background: #FF6FA5; }
+
+  /* halaman akhir */
+  #ending {
+    display: none;
+  }
+  #ending .question-text {
+    font-size: 1.5rem;
+  }
+  .emoji-big {
+    font-size: 3rem;
+    margin-bottom: 16px;
+  }
+
+  /* hati beterbangan di background */
+  .floating-heart {
+    position: fixed;
+    bottom: -40px;
+    font-size: 1.6rem;
+    opacity: 0.8;
+    animation: floatUp 4s ease-in forwards;
+    z-index: 1;
+    pointer-events: none;
+  }
+  @keyframes floatUp {
+    0% { transform: translateY(0) translateX(0) rotate(0deg); opacity: 0.9; }
+    100% { transform: translateY(-110vh) translateX(var(--drift, 20px)) rotate(20deg); opacity: 0; }
+  }
+
+  /* confetti */
+  .confetti-piece {
+    position: fixed;
+    top: -20px;
+    width: 8px;
+    height: 14px;
+    z-index: 1;
+    animation: confettiFall 3.2s linear forwards;
+    pointer-events: none;
+  }
+  @keyframes confettiFall {
+    0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(100vh) rotate(360deg); opacity: 0.3; }
+  }
+
+  @media (max-width: 480px) {
+    .container { padding: 36px 22px; }
+    .question-text { font-size: 1.2rem; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="container" id="quiz-box">
+    <div class="question-text" id="question-text">kamu kangen aku gaaa</div>
+    <div class="btn-row" id="btn-row">
+      <button class="btn-yes" onclick="nextQuestion()">iya banget dongg</button>
+      <button class="btn-no" id="btn-no">ga tuh</button>
+    </div>
+    <div class="progress-dots">
+      <div class="dot active" id="dot-0"></div>
+      <div class="dot" id="dot-1"></div>
+      <div class="dot" id="dot-2"></div>
+    </div>
+  </div>
+
+  <div class="container" id="ending">
+    <div class="emoji-big">💗</div>
+    <div class="question-text">oke karena kamu kangen bgt dan kecintaan bgt sama aku, besok kita ketemu yaa sayangkuu cintaku</div>
+  </div>
+
+<script>
+  const questions = [
+    { text: "kamu kangen aku gaaa", yes: "iya banget dongg", no: "ga tuh" },
+    { text: "aku tau kok kamu kangen aku, kan kamu emang kecintaan bgt", yes: "tau", no: "eww pd bgt" },
+    { text: "besok mau ditemuin dimanja manjain ga", yes: "mau mauuuwww", no: "ga ah malas" }
+  ];
+
+  let current = 0;
+  const questionText = document.getElementById('question-text');
+  const btnRow = document.getElementById('btn-row');
+  const quizBox = document.getElementById('quiz-box');
+  const ending = document.getElementById('ending');
+
+  function renderQuestion() {
+    const q = questions[current];
+    questionText.style.opacity = 0;
+    setTimeout(() => {
+      questionText.textContent = q.text;
+      btnRow.innerHTML = `
+        <button class="btn-yes" onclick="nextQuestion()">${q.yes}</button>
+        <button class="btn-no" id="btn-no">${q.no}</button>
+      `;
+      attachDodge();
+      questionText.style.opacity = 1;
+      for (let i = 0; i < 3; i++) {
+        const dot = document.getElementById('dot-' + i);
+        if (dot) dot.classList.toggle('active', i === current);
+      }
+    }, 200);
+  }
+
+  function attachDodge() {
+    const btnNo = document.getElementById('btn-no');
+    const dodge = () => {
+      // pindahin tombol "tidak" ke posisi random di dalam area kontainer,
+      // pakai posisi absolute relatif ke btn-row
+      const rowRect = btnRow.getBoundingClientRect();
+      const btnRect = btnNo.getBoundingClientRect();
+      const maxX = Math.max(rowRect.width - btnRect.width, 40);
+      const maxY = Math.max(120 - btnRect.height, 20);
+      const randX = Math.random() * maxX - maxX / 2;
+      const randY = Math.random() * maxY - maxY / 2;
+      btnNo.style.position = 'relative';
+      btnNo.style.left = randX + 'px';
+      btnNo.style.top = randY + 'px';
+    };
+    btnNo.addEventListener('mouseenter', dodge);
+    btnNo.addEventListener('click', (e) => { e.preventDefault(); dodge(); });
+    btnNo.addEventListener('touchstart', (e) => { e.preventDefault(); dodge(); }, { passive: false });
+  }
+
+  function nextQuestion() {
+    current++;
+    if (current < questions.length) {
+      renderQuestion();
+    } else {
+      showEnding();
+    }
+  }
+
+  function showEnding() {
+    quizBox.style.display = 'none';
+    ending.style.display = 'block';
+    celebrate();
+  }
+
+  function celebrate() {
+    const heartEmojis = ['💗','💕','💖','💓'];
+    const colors = ['#FF6FA5','#FFB6C9','#FF9EC4','#FFD3E2'];
+
+    for (let i = 0; i < 16; i++) {
+      setTimeout(() => {
+        const heart = document.createElement('div');
+        heart.className = 'floating-heart';
+        heart.textContent = heartEmojis[Math.floor(Math.random() * heartEmojis.length)];
+        heart.style.left = Math.random() * 100 + 'vw';
+        heart.style.setProperty('--drift', (Math.random() * 80 - 40) + 'px');
+        document.body.appendChild(heart);
+        setTimeout(() => heart.remove(), 4000);
+      }, i * 150);
+    }
+
+    for (let i = 0; i < 30; i++) {
+      setTimeout(() => {
+        const piece = document.createElement('div');
+        piece.className = 'confetti-piece';
+        piece.style.left = Math.random() * 100 + 'vw';
+        piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+        document.body.appendChild(piece);
+        setTimeout(() => piece.remove(), 3200);
+      }, i * 60);
+    }
+  }
+
+  attachDodge();
+</script>
+
+</body>
+</html>
